@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sale Receipt PDF</title>
+    <style>
+        * {
+            font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+            color: #000;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin: 0;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            margin: 0;
+        }
+
+        .details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .details p {
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        table th {
+            text-align: left;
+            background-color: #f0f0f0;
+        }
+
+        table td.text-right {
+            text-align: right;
+        }
+
+        .total-row td {
+            font-weight: bold;
+        }
+
+        .thanks {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="text-center">
+            <img src="{{ logo_url }}" alt="Logo">
+        </div>
+        <h1>Abdul Rehman Lock Makers</h1>
+        <br>
+        <p>Shoe Market Gali Imam Bargha, Sahiwal</p>
+        <br>
+        <p>Abdul Rehman: 0300-9693370</p>
+        <p>Asad ur Rehman: 0322-2221645</p>
+    </div>
+    <div class="details">
+        <div>
+            <br>
+            <p><strong>Date:</strong> {{ sale.date_added }}</p>
+            <p><strong>Sale ID:</strong> {{ sale.id }}</p>
+            <p><strong>Customer:</strong> {{ sale.customer.get_full_name }} {{ sale.customer.phone }}</p>
+        </div>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th class="text-right">Price</th>
+            <th class="text-right">Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for detail in details %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ detail.product.name }}</td>
+                <td>{{ detail.quantity }}</td>
+                <td class="text-right">{{ detail.price }} ₨</td>
+                <td class="text-right">{{ detail.total_detail }} ₨</td>
+            </tr>
+        {% endfor %}
+        <tr class="total-row">
+            <td colspan="4" class="text-right">Subtotal</td>
+            <td class="text-right">{{ sale.sub_total|floatformat:2 }} ₨</td>
+        </tr>
+        <tr class="total-row">
+            <td colspan="4" class="text-right">Previous Balance</td>
+            <td class="text-right">{{ sale.customer.balance }} ₨</td>
+        </tr>
+        <tr class="total-row">
+            <td colspan="4" class="text-right">Grand Total</td>
+            <td class="text-right">{{ sale.grand_total|floatformat:2 }} ₨</td>
+        </tr>
+        <tr>
+            <td colspan="4" class="text-right">Amount Paid</td>
+            <td class="text-right">{{ sale.amount_payed }} ₨</td>
+        </tr>
+        <tr>
+            <td colspan="4" class="text-right">Change</td>
+            <td class="text-right">{{ sale.amount_change }} ₨</td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="thanks">
+        <p>Thank you for your preference!</p>
+    </div>
+</div>
+</body>
+</html>

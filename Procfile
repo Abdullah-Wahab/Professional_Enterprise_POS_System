@@ -1,0 +1,1 @@
+web: gunicorn django_pos.django_pos.wsgi

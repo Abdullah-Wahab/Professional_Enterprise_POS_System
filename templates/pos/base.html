@@ -1,0 +1,176 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>{% block title %}{% endblock %}</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+    <!--Favicon-->
+    <link rel="icon" type="image/png" href="{% static 'store1.png' %}"/>
+
+    {% block stylesheets %}{% endblock stylesheets %}
+
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        {% include 'pos/sidebar.html' %}
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                {% include 'pos/navbar.html' %}
+                <!-- End of Topbar -->
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">{% block heading %}{% endblock %}</h1>
+                    </div>
+
+                    <!--Messages will appear here-->
+                    {% include 'pos/messages.html' with messages=messages%}
+
+                    <!--Page content goes here-->
+                    {% block content %}{% endblock content %}
+
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            {% include 'pos/footer.html' %}
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal-->
+    {% include 'pos/logout_modal.html' %}
+    <!-- End ofLogout Modal-->
+
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+
+    <!--JavaScript to dissapear messagess automatically-->
+    {% comment %} <script type='text/javascript' src="{% static 'js/dissapear_messages.js' %}"></script> {% endcomment %}
+
+    <!-- Page level custom scripts -->
+    <!-- Specific Page JS goes HERE  -->
+    {% block javascripts %}{% endblock javascripts %}
+
+    {% comment %} <script>
+        class LanguageSwitcher {
+            constructor(languageData) {
+                this.languageData = languageData;
+                this.defaultLanguage = "eng";
+                this.languageLinks = document.querySelectorAll('[data-language]');
+                this.selectedLanguage = localStorage.getItem("language") || this.defaultLanguage;
+    
+                this.init();
+            }
+    
+            init() {
+                this.translateContent(this.selectedLanguage);
+                this.addClickListeners();
+            }
+    
+            translateContent(lang) {
+                const elements = document.querySelectorAll(".translatable");
+                for (let i = 0; i < elements.length; i++) {
+                    const key = elements[i].getAttribute("data-key");
+                    elements[i].textContent = this.languageData[lang][key] || "";
+                }
+            }
+    
+            setLanguage(lang) {
+                localStorage.setItem("language", lang);
+                this.translateContent(lang);
+                location.reload(); // Reload the page to reflect the new language
+            }
+    
+            addClickListeners() {
+                for (let i = 0; i < this.languageLinks.length; i++) {
+                    this.languageLinks[i].addEventListener("click", (event) => {
+                        event.preventDefault();
+                        const lang = this.languageLinks[i].getAttribute("data-language");
+                        this.setLanguage(lang);
+                    });
+                }
+            }
+        }
+    
+        // Language data
+        const languageData = {
+            eng: {
+                products: "Products",
+                categories: "Categories",
+                sales: "Sales",
+                customers: "Customers",
+                dashboard: "Dashboard"
+            },
+            urd: {
+                products: "اشیاء",
+                categories: "اقسام",
+                sales: "فروخت",
+                customers: "گاہک",
+                dashboard: "ڈیش بورڈ"
+            }
+        };
+    
+        // Instantiate the LanguageSwitcher class
+        const languageSwitcher = new LanguageSwitcher(languageData);
+
+        // TO MAKE IT RUNNING YOU HAVE TO PUT  <span class="translatable" data-key="sales"></span>
+    </script> {% endcomment %}
+
+
+</body>
+
+</html>
