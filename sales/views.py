@@ -7,10 +7,12 @@ from django_pos import settings
 from django.template.loader import get_template
 from customers.models import Customer
 from products.models import Product
-from weasyprint import HTML, CSS
+# from weasyprint import HTML, CSS
 from .models import Sale, SaleDetail
 import json
 from django.templatetags.static import static
+from io import BytesIO
+from xhtml2pdf import pisa
 
 
 def is_ajax(request):
@@ -106,8 +108,8 @@ def SalesDetailsView(request, sale_id):
         return redirect('sales:sales_list')
 
 
-@login_required(login_url="/accounts/login/")
-def ReceiptPDFView(request, sale_id):
+
+# def ReceiptPDFView(request, sale_id):
     """
     Args:
         sale_id: ID of the sale to view the receipt
@@ -136,3 +138,51 @@ def ReceiptPDFView(request, sale_id):
     pdf = HTML(string=html_template).write_pdf(stylesheets=[CSS(css_url)])
 
     return HttpResponse(pdf, content_type="application/pdf")
+@login_required(login_url="/accounts/login/")
+def ReceiptPDFView(request, sale_id):
+    """
+    Args:
+        sale_id: ID of the sale to view the receipt
+    """
+    # Get the sale
+    sale = Sale.objects.get(id=sale_id)
+
+    # Get the sale details
+    details = SaleDetail.objects.filter(sale=sale)
+
+    template = get_template("sales/sales_receipt_pdf.html")
+    context = {
+        "sale": sale,
+        "details": details,
+        "logo_url": request.build_absolute_uri(static('logo4r1.jpg')),
+    }
+    html_template = template.render(context)
+
+    # CSS Bootstrap
+    css_url = os.path.join(
+        settings.BASE_DIR, 'static/css/receipt_pdf/bootstrap.min.css')
+
+    # Create a file-like buffer to receive PDF data
+    buffer = BytesIO()
+
+    # Create the PDF object
+    pisa_status = pisa.CreatePDF(html_template, dest=buffer, encoding='utf-8', link_callback=fetch_resources)
+
+    if not pisa_status.err:
+        # Return the PDF as a response
+        pdf = buffer.getvalue()
+        buffer.close()
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="receipt.pdf"'
+        response.write(pdf)
+        return response
+
+    return HttpResponse('Error generating PDF', status=500)
+
+
+def fetch_resources(uri, rel):
+    """
+    Callback function for resolving static files in xhtml2pdf.
+    """
+    path = settings.STATIC_ROOT
+    return path + uri.replace(settings.STATIC_URL, '')
