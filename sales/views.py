@@ -13,7 +13,7 @@ from django.template.loader import get_template
 from django.http import HttpResponse
 import os
 
-os.add_dll_directory(r"D:\django_point_of_sale\d_pos\static\msys64\mingw64\bin")
+os.add_dll_directory(r"C:\msys64\mingw64\bin")
 from weasyprint import HTML, CSS
 
 
