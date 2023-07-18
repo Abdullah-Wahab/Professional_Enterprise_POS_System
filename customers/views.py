@@ -29,6 +29,7 @@ def CustomersAddView(request):
             "address": data['address'],
             "email": data['email'],
             "phone": data['phone'],
+            "balance": data['balance'],
         }
 
         # Check if a customer with the same attributes exists
@@ -89,6 +90,7 @@ def CustomersUpdateView(request, customer_id):
                 "address": data['address'],
                 "email": data['email'],
                 "phone": data['phone'],
+                "balance": data['balance'],
             }
 
             # Check if a customer with the same attributes exists
@@ -103,7 +105,7 @@ def CustomersUpdateView(request, customer_id):
 
             customer = Customer.objects.get(id=customer_id)
 
-            messages.success(request, '¡Customer: ' + customer.get_full_name() +
+            messages.success(request, 'Customer: ' + customer.get_full_name() +
                              ' updated successfully!', extra_tags="success")
             return redirect('customers:customers_list')
         except Exception as e:
@@ -125,7 +127,7 @@ def CustomersDeleteView(request, customer_id):
         # Get the customer to delete
         customer = Customer.objects.get(id=customer_id)
         customer.delete()
-        messages.success(request, '¡Customer: ' + customer.get_full_name() +
+        messages.success(request, 'Customer: ' + customer.get_full_name() +
                          ' deleted!', extra_tags="success")
         return redirect('customers:customers_list')
     except Exception as e:

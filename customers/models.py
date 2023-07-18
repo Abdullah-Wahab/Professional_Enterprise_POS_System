@@ -22,6 +22,7 @@ class Customer(models.Model):
     def to_select2(self):
         item = {
             "label": self.get_full_name(),
+            "number": self.phone,
             "value": self.id
         }
         return item

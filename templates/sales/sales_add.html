@@ -90,7 +90,7 @@
                                     <select name="customer" class="form-control" id="searchbox_customers">
                                         <option value="" selected disabled hidden>Select the customer</option>
                                         {% for customer in customers %}
-                                        <option value="{{customer.value}}">{{customer.label}}</option>
+                                        <option value="{{customer.value}}">{{customer.label}} {{customer.number}}</option>
                                         {% endfor %}
                                     </select>
                                 <div class="form-group mt-4">
@@ -219,9 +219,20 @@
                 columns: [
                     {"data": "number"}, 
                     {"data": "name"},
-                    {"data": "price"},
+                    //{"data": "price"},
+                    {
+                        "data": "price",
+                        render: function (data, type, row) {
+                            return '<input name="price" type="text" class="form-control form-control-xs text-right input-sm" autocomplete="off" value="' + parseFloat(data).toFixed(2) + '">';
+                        },
+                    },
                     {"data": "quantity"},
-                    {"data": "total_product"},
+                    {
+                        "data": "total_product",
+                        render: function (data, type, row) {
+                            return '<span class="total-amount">' + parseFloat(data).toFixed(2) + ' $</span>';
+                        },
+                    },
                     {"data": "id"},
                 ],
                 columnDefs: [
@@ -471,7 +482,7 @@
         }
 
         // Send the sale via ajax
-        
+
         $('.saleForm').on('submit', function (e) {  
             // Only allow to send if we have at least one product
             if (sale.items.products.length === 0 ) {
@@ -482,15 +493,15 @@
                 });
                 return false;
             };
-            
+
             // Only allow to send if the payed amount is equal or greater than the total
-            if ($('[name="amount_payed"]').val() <= $('[name="grand_total"]').val()) {
-                Swal.fire({
-                    title: 'Payable Amount is lower that the Grand Total',
-                    icon: 'warning',
-                });
-                return false;
-            }
+            //if ($('[name="amount_payed"]').val() <= $('[name="grand_total"]').val()) {
+              //  Swal.fire({
+                //    title: 'Payable Amount is lower that the Grand Total',
+                //    icon: 'warning',
+                // });
+                // return false;
+            // }
 
             // Agregamos los datos faltantes al objeto sales
             sale.items.customer = $('select[name="customer"]').val();
@@ -542,6 +553,23 @@
             });
             
         });
-        
+        $(document).ready(function() { 
+            // ...
+            // Add event listener to update total amount on price change
+            $('#table_products').on('change', 'input[name="price"]', function() {
+                var table = $('#table_products').DataTable();
+                var row = table.row($(this).closest('tr'));
+                var price = parseFloat($(this).val());
+                var quantity = parseFloat(row.data().quantity);
+                var total = price * quantity;
+                row.data().price = price.toFixed(2);
+                row.data().total_product = total.toFixed(2);
+                row.invalidate();
+                $(this).closest('tr').find('.total-amount').text(total.toFixed(2) + ' $');
+                // Recalculate the sale
+                sale.calculate_sale();
+            });
+
+         })
 </script>
 {% endblock javascripts %}

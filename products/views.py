@@ -268,8 +268,9 @@ def GetProductsAJAXView(request):
         if is_ajax(request=request):
             data = []
 
-            products = Product.objects.filter(
-                name__icontains=request.POST['term'])
+            products = Product.objects.filter(category__name__icontains=request.POST['term'])
+            # products = Product.objects.filter(
+            #     name__icontains=request.POST['term']) # ORIGINAL CODE WITHOUT EDIT
             for product in products[0:10]:
                 item = product.to_json()
 
