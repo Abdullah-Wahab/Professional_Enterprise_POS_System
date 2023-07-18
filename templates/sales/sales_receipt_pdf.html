@@ -97,7 +97,7 @@
             <br>
             <p><strong>Date:</strong> {{ sale.date_added }}</p>
             <p><strong>Sale ID:</strong> {{ sale.id }}</p>
-            <p><strong>Customer:</strong> {{ sale.customer.get_full_name }} {{ sale.customer.phone }}</p>
+            <p><strong>Customer:</strong> {{ sale.customer.get_full_name }} ({{ sale.customer.address }}) {{ sale.customer.phone }}</p>
         </div>
     </div>
     <table>

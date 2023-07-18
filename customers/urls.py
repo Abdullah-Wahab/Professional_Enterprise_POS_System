@@ -14,4 +14,7 @@ urlpatterns = [
     # Delete customer
     path('delete/<str:customer_id>',
          views.CustomersDeleteView, name='customers_delete'),
+    # to search for previous balance
+    path('search/<str:customer_id>',
+         views.CustomerBalanceView, name='customers_balance'),
 ]

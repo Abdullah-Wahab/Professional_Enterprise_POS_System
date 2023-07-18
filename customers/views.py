@@ -135,3 +135,13 @@ def CustomersDeleteView(request, customer_id):
             request, 'There was an error during the elimination!', extra_tags="danger")
         print(e)
         return redirect('customers:customers_list')
+
+from django.http import JsonResponse
+
+@login_required(login_url="/accounts/login/")
+def CustomerBalanceView(request, customer_id):
+    # customer_id = request.GET.get('customer_id')
+    # print(customer_id)
+    customer = Customer.objects.get(id=customer_id)
+    previous_balance = customer.balance
+    return JsonResponse({'previous_balance': previous_balance})
