@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django_pos.wsgi import *
 from django_pos import settings
@@ -47,15 +47,13 @@ def SalesAddView(request):
                 "customer": Customer.objects.get(id=int(data['customer'])),
                 "sub_total": float(data["sub_total"]),
                 "grand_total": float(data["grand_total"]),
-                # "tax_amount": float(data["tax_amount"]),
-                # "tax_percentage": float(data["tax_percentage"]),
                 "amount_payed": float(data["amount_payed"]),
                 "amount_change": float(data["amount_change"]),
             }
             try:
                 # Create the sale
                 new_sale = Sale.objects.create(**sale_attributes)
-                new_sale.save()
+
                 # Create the sale details
                 products = data["products"]
 
@@ -73,8 +71,12 @@ def SalesAddView(request):
 
                 print("Sale saved")
 
-                messages.success(
-                    request, 'Sale created succesfully!', extra_tags="success")
+                response_data = {
+                    "status": "success",
+                    "message": "Sale created successfully",
+                    "sale_id": new_sale.id
+                }
+                return JsonResponse(response_data)
 
             except Exception as e:
                 messages.success(
@@ -92,7 +94,7 @@ def SalesDetailsView(request, sale_id):
         sale_id: ID of the sale to view
     """
     try:
-        # Get tthe sale
+        # Get the sale
         sale = Sale.objects.get(id=sale_id)
 
         # Get the sale details
@@ -130,7 +132,7 @@ def ReceiptPDFView(request, sale_id):
     }
     html_template = template.render(context)
 
-    # CSS Boostrap
+    # CSS Bootstrap
     css_url = os.path.join(
         settings.BASE_DIR, 'static/css/receipt_pdf/bootstrap.min.css')
     # css_url = os.path.join(

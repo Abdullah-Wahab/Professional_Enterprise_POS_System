@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from .models import Category, Product
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 
 @login_required(login_url="/accounts/login/")
@@ -103,7 +104,7 @@ def CategoriesUpdateView(request, category_id):
 
             category = Category.objects.get(id=category_id)
 
-            messages.success(request, '¡Category: ' + category.name +
+            messages.success(request, 'Category: ' + category.name +
                              ' updated successfully!', extra_tags="success")
             return redirect('products:categories_list')
         except Exception as e:
@@ -125,7 +126,7 @@ def CategoriesDeleteView(request, category_id):
         # Get the category to delete
         category = Category.objects.get(id=category_id)
         category.delete()
-        messages.success(request, '¡Category: ' + category.name +
+        messages.success(request, 'Category: ' + category.name +
                          ' deleted!', extra_tags="success")
         return redirect('products:categories_list')
     except Exception as e:
@@ -182,7 +183,7 @@ def ProductsAddView(request):
             new_product.save()
 
             messages.success(request, 'Product: ' +
-                             attributes["name"] + ' created succesfully!', extra_tags="success")
+                             attributes["name"] + ' created successfully!', extra_tags="success")
             return redirect('products:products_list')
         except Exception as e:
             messages.success(
@@ -248,7 +249,7 @@ def ProductsDeleteView(request, product_id):
         # Get the product to delete
         product = Product.objects.get(id=product_id)
         product.delete()
-        messages.success(request, '¡Product: ' + product.name +
+        messages.success(request, 'Product: ' + product.name +
                          ' deleted!', extra_tags="success")
         return redirect('products:products_list')
     except Exception as e:
@@ -268,7 +269,10 @@ def GetProductsAJAXView(request):
         if is_ajax(request=request):
             data = []
 
-            products = Product.objects.filter(category__name__icontains=request.POST['term'])
+            products = Product.objects.filter(
+                Q(name__icontains=request.POST['term']) | Q(category__name__icontains=request.POST['term']),
+                status="ACTIVE"
+            )
             # products = Product.objects.filter(
             #     name__icontains=request.POST['term']) # ORIGINAL CODE WITHOUT EDIT
             for product in products[0:10]:

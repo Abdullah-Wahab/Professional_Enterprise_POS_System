@@ -37,7 +37,7 @@
                     <thead>
                         <tr>
                             <th style="width:5%">#</th>
-                            <th style="width:15%">ID</th>
+                            <th style="width:15%">Invoice Number</th>
                             <th style="width:25%">Date</th>
                             <th style="width:20%">Customer</th>
                             <th class="text-center" style="width:10%">Total</th>
@@ -46,13 +46,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for s in sales %}
+                        {% for s in sales|dictsortreversed:"date_added" %}
                         <tr>
                             <td>{{forloop.counter}}</td>
-                            <td>{{s.id}}</td>
+                            <td>{{s.invoice_number}}</td>
                             <td>{{s.date_added}}</td>
                             <td>{{s.customer.get_full_name}}</td>
-                            <td class="text-right" >{{s.grand_total}}</td>
+                            <td class="text-right" >{{s.sub_total}}</td>
                             <td class="text-center" >{{s.sum_items}}</td>
                             <td class="text-center">
                                 <!--View-->
@@ -62,7 +62,7 @@
                                     </button>
                                 </a>
                                 <!--Print receipt-->
-                                <a href="{% url 'sales:sales_receipt_pdf' s.id %}" class="text-decoration-none">
+                                <a href="{% url 'sales:sales_receipt_pdf' s.id %}" class="text-decoration-none" target="_blank">
                                     <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="tooltip" title="View Receipt">
                                         <i class="fas fa-receipt"></i>
                                     </button>
@@ -179,7 +179,8 @@
                 }
             ],
             deferRender: true,
-            lengthMenu: [[-1], ["All"]],
+            {#lengthMenu: [[-1], ["All"]],#} // it also can be used for showing all products on 1 page
+            paging: false,
             columnDefs: [
                 {
                     targets: [-1], // column index (start from 0)

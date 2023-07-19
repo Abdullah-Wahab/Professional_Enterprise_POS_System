@@ -209,7 +209,8 @@
                 }
             ],
             deferRender: true,
-            lengthMenu: [[-1], ["All"]],
+            {#lengthMenu: [[-1], ["All"]],#} // it also can be used for showing all products on 1 page
+            paging: false,
             columnDefs: [
                 {
                     targets: [0],

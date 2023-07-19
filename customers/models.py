@@ -9,6 +9,7 @@ class Customer(models.Model):
     email = models.EmailField(max_length=256, blank=True, null=True)
     phone = models.CharField(max_length=30, blank=True, null=True)
     balance = models.IntegerField(default=0, null=True)
+    old_balance = models.IntegerField(default=0, null=True)
 
     class Meta:
         db_table = 'Customers'

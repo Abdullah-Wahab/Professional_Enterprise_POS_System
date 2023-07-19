@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from .models import Customer
+from django.http import JsonResponse
 
 
 @login_required(login_url="/accounts/login/")
@@ -46,7 +47,7 @@ def CustomersAddView(request):
             new_customer.save()
 
             messages.success(request, 'Customer: ' + attributes["first_name"] + " " +
-                             attributes["last_name"] + ' created succesfully!', extra_tags="success")
+                             attributes["last_name"] + ' created successfully!', extra_tags="success")
             return redirect('customers:customers_list')
         except Exception as e:
             messages.success(
@@ -136,12 +137,9 @@ def CustomersDeleteView(request, customer_id):
         print(e)
         return redirect('customers:customers_list')
 
-from django.http import JsonResponse
 
 @login_required(login_url="/accounts/login/")
 def CustomerBalanceView(request, customer_id):
-    # customer_id = request.GET.get('customer_id')
-    # print(customer_id)
     customer = Customer.objects.get(id=customer_id)
     previous_balance = customer.balance
     return JsonResponse({'previous_balance': previous_balance})

@@ -39,15 +39,15 @@
                     <div class="col-md-9 pl-0">
                         <div class="card card-secondary">
                             <div class="card-header">Sale products</div>
-                            
+
                             <div class="card-body">
                                 <!--Search product-->
-                                <div class="form-group">
-                                    <label>Search product:</label>
-                                    <div class="input-group">
-                                        <select class="form-control select2" name="searchbox_products" id="searchbox_products"></select>
-                                    </div>
-                                </div>
+{#                                <div class="form-group">#}
+{#                                    <label>Search product:</label>#}
+{#                                    <div class="input-group">#}
+{#                                        <select class="form-control select2" name="searchbox_products" id="searchbox_products"></select>#}
+{#                                    </div>#}
+{#                                </div>#}
                                 <!--End Search product-->
 
                                 <!--Delete all products from sale-->
@@ -71,6 +71,18 @@
                                             </thead>
                                         <tbody>
                                         </tbody>
+                                         <tfoot>
+                                            <tr>
+                                                <td colspan="4">
+                                                    <!--Search product-->
+                                                    <div class="form-group mb-0">
+                                                        <select class="form-control select2" name="searchbox_products" id="searchbox_products"></select>
+                                                    </div>
+                                                </td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                                 <!--End Products table-->
@@ -90,7 +102,7 @@
                                     <select name="customer" class="form-control" id="searchbox_customers">
                                         <option value="" selected disabled hidden>Select the customer</option>
                                         {% for customer in customers %}
-                                        <option value="{{customer.value}}">{{customer.label}} {{customer.number}}</option>
+                                            <option value="{{customer.value}}">{{customer.label}} {{customer.number}}</option>
                                         {% endfor %}
                                     </select>
                                 <div class="form-group mt-4">
@@ -99,12 +111,6 @@
                                         <input name="sub_total" class="form-control" required>
                                     </div>
                                 </div>
-                                {% comment %} <div class="form-group">
-                                    <label>Tax Inclusive (%)</label>
-                                    <div class="input-group">
-                                        <input name="tax_percentage" class="form-control" value=0 required>
-                                    </div>
-                                </div> {% endcomment %}
                                 <div class="form-group">
                                     <label>Previous Balance</label>
                                     <div class="input-group">
@@ -172,8 +178,6 @@
             customer : 0, 
             sub_total : 0.00, 
             grand_total : 0.00, 
-           //tax_amount : 0.00, 
-            //tax_percentage : 0.00, 
             previous_balance : 0.00,
             amount_payed : 0.00, 
             amount_change : 0.00,
@@ -185,11 +189,9 @@
             // Subtotal of all products added
             var sub_total = 0.00
 
-            //var tax_percentage = $('input[name="tax_percentage"]').val();
-
             // Calculates the total for each product
             $.each(this.items.products, function(pos, dict){
-                dict.pos = pos;  
+                dict.pos = pos;
                 dict.total_product = roundTo(dict.quantity * dict.price, 2);
                 // Add the product total to the sale subtotal
                 sub_total += roundTo(dict.total_product, 2);
@@ -197,11 +199,9 @@
 
             //Update the sale subtotal, grand total, and tax amount
             this.items.sub_total = roundTo(sub_total, 2);
-            this.items.grand_total = roundTo(this.items.sub_total, 2);
-            //this.items.tax_amount = roundTo(this.items.sub_total * (tax_percentage / 100), 2);
-    
+            this.items.grand_total = roundTo(this.items.previous_balance + this.items.sub_total, 2);
+
             $('input[name="sub_total"]').val(this.items.sub_total);
-           // $('input[name="tax_amount"]').val(this.items.tax_amount);
             $('input[name="grand_total"]').val(this.items.grand_total);
         },
         // Adds a product to the sale object
@@ -217,6 +217,7 @@
             tblProducts = $("#table_products").DataTable({
                 destroy: true,
                 data: this.items.products,
+                paging: false,
                 columns: [
                     {"data": "number"}, 
                     {"data": "name"},
@@ -231,7 +232,7 @@
                     {
                         "data": "total_product",
                         render: function (data, type, row) {
-                            return '<span class="total-amount">' + parseFloat(data).toFixed(2) + ' $</span>';
+                            return '<span class="total-amount">' + parseFloat(data).toFixed(2) + ' ₨</span>';
                         },
                     },
                     {"data": "id"},
@@ -250,7 +251,7 @@
                         class: 'text-right',
                         targets: [2,4],
                         render: function (data, type, row){
-                            return parseFloat(data).toFixed(2) + ' $';
+                            return parseFloat(data).toFixed(2) + ' ₨';
                         },
                     },
                     {
@@ -276,29 +277,10 @@
                     });
                 },
             })
-            
-            // IDs de productos ya seleccionados para exlcuir en la busqueda
-            //console.log("this.traer_ids()");
-            //console.log(this.traer_ids());
-            
         },
     };
 
     $(document).ready(function() {
-
-        //Tax percentage touchspin
-        // $("input[name='tax_percentage']").TouchSpin({
-          //  min: 0,
-            //max: 100,
-            //step: 1,
-            //decimals: 2,
-           // boostat: 5,
-           // maxboostedstep: 10,
-           // postfix: '%'
-      //  }).on('change', function(){
-      //      sale.calculate_sale();
-      //  });
-
 
         //Select2 customers
         $('#searchbox_customers').select2({
@@ -309,7 +291,7 @@
         // Tables Events
         $('#table_products tbody').on('click', 'a[rel="delete"]', function () {
                 // When a product is deleted
-                
+
                 // Row variable of the table
                 var tr = tblProducts.cell($(this).closest('td, li')).index();
                 product_name = (tblProducts.row(tr.row).data().name)
@@ -357,7 +339,7 @@
                 // Calculate the sale with the new quantity
                 sale.calculate_sale();
                 // Find the row to update the product total
-                $('td:eq(4)', tblProducts.row(tr.row).node()).html(sale.items.products[tr.row].total_product + ' $');
+                $('td:eq(4)', tblProducts.row(tr.row).node()).html(sale.items.products[tr.row].total_product + ' ₨');
         });
 
         // Delete all products
@@ -443,8 +425,12 @@
                 console.log("Sale items");      
                 console.log(sale.items);      
                 //Clean the searchbox after the product is selected
-                $(this).val('').trigger('change.select2');; 
+                $(this).val('').trigger('change.select2');
+                $(this).select2('open');
             });
+        $(document).on("select2:open", () => {
+          document.querySelector(".select2-container--open .select2-search__field").focus()
+        })
 
             $(document).ready(function() {
                 $('#searchbox_customers').on('change', function() {
@@ -454,14 +440,18 @@
                             url: "{% url 'customers:customers_balance' customer_id=0 %}".replace('0', customerId),
                             type: 'GET',
                             success: function(response) {
+                                sale.items.previous_balance = response.previous_balance;
                                 $('#previous_balance').val(response.previous_balance);
+                                sale.calculate_sale();
                             },
                             error: function(xhr, status, error) {
                                 console.error(error);
                             }
                         });
                     } else {
+                        sale.items.previous_balance = 0.00;
                         $('#previous_balance').val('');
+                        sale.calculate_sale();
                     }
                 });
             });
@@ -477,8 +467,6 @@
                     }
                 ],
             });
-            
-
         });
 
         // Product searchbox templateResult
@@ -486,15 +474,15 @@
             if (repo.loading) {
                 return repo.text;
             }
-        
+
             var option = $(
                 '<div class="wrapper container">'+
                 ' <div class="row">' +
                     '<div class="col-lg-11 text-left shadow-sm">' +
                       //'<br>' +
                       '<p style="margin-bottom: 5px;">' +
-                      '<b>Name:</b> ' + repo.text + " | Category: " + "<span class='btn-info px-2'>" + repo.category + '</span> <br>' +
-                      '<b>Price:</b> <span class="btn-success px-2">'+repo.price+' $. </span>'+
+                      '<b>Name:</b> <span class="btn-success px-2">' + repo.text + '</span>' + " | Description: " + "<span class='btn-info px-2'>" + repo.description + '</span> <br>' +
+                      '<b>Price:</b> <span class="btn-success px-2">' + repo.price +' ₨.</span>' + " | Category: " + "<span class='btn-info px-2'>" + repo.category + '</span> <br>' +
                       '</p>' +
                     '</div>' +
                   '</div>' +
@@ -505,7 +493,8 @@
 
         // Send the sale via ajax
 
-        $('.saleForm').on('submit', function (e) {  
+        $('.saleForm').on('submit', function (e) {
+            {#e.preventDefault();#}
             // Only allow to send if we have at least one product
             if (sale.items.products.length === 0 ) {
                 Swal.fire({
@@ -528,10 +517,8 @@
             // Agregamos los datos faltantes al objeto sales
             sale.items.customer = $('select[name="customer"]').val();
             console.log("Customer: " + sale.items.customer)
-            sale.items.sub_total = $('input[name="sub_total"]').val(); 
+            sale.items.sub_total = $('input[name="sub_total"]').val();
             sale.items.grand_total = $('input[name="grand_total"]').val();
-           // sale.items.tax_amount = $('input[name="tax_amount"]').val(); 
-           // sale.items.tax_percentage = $('input[name="tax_percentage"]').val();
             sale.items.amount_payed = $('input[name="amount_payed"]').val(); 
             sale.items.amount_change = roundTo($('input[name="amount_payed"]').val() - $('input[name="grand_total"]').val(), 2); 
 
@@ -560,12 +547,27 @@
                 datatype: "json",
                 processData: false,
                 contentType: false,
-                success: function (data) {
-                    console.log("Ajax OK")
-                },
-                error: function (error) {
-                    console.log("Ajax error");
-                    console.log(error);
+                success: function (response) {
+            if (response && response.sale_id) {
+                // Extract the sale ID from the response
+                var saleId = response.sale_id;
+
+                // Generate the URL for the invoice PDF
+                var pdfUrl = "/sales/pdf/" + saleId;
+
+                // Open the PDF URL in a new tab
+                var win = window.open(pdfUrl, '_blank');
+                if (win) {
+                    // Browser has allowed opening the new tab
+                    win.focus();
+                } else {
+                    // Browser has blocked opening the new tab
+                    alert('Please allow pop-ups for this website to view the invoice.');
+                }
+            } else {
+                // Handle the case where the sale ID is missing in the response
+                console.error('Sale ID is missing in the response.');
+            }
                 },
             }).done(function (data){
                 console.log ("Ajax Done");
@@ -587,7 +589,7 @@
                 row.data().price = price.toFixed(2);
                 row.data().total_product = total.toFixed(2);
                 row.invalidate();
-                $(this).closest('tr').find('.total-amount').text(total.toFixed(2) + ' $');
+                $(this).closest('tr').find('.total-amount').text(total.toFixed(2) + ' ₨');
                 // Recalculate the sale
                 sale.calculate_sale();
             });
