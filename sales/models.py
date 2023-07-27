@@ -19,13 +19,14 @@ class Sale(models.Model):
         db_table = 'Sales'
 
     def __str__(self) -> str:
-        return "Sale ID: " + str(self.id) + " | Grand Total: " + str(self.grand_total) + " | Datetime: " + str(self.date_added)
+        return "Sale ID: " + str(self.id) + " | Grand Total: " + str(self.grand_total) + " | Datetime: " + str(
+            self.date_added)
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:
             used_numbers = set(Sale.objects.values_list('invoice_number', flat=True))
             while True:
-                invoice_number = random.randint(10000, 99999)
+                invoice_number = random.randint(10000, 999999)
                 if invoice_number not in used_numbers:
                     self.invoice_number = invoice_number
                     break
@@ -33,7 +34,7 @@ class Sale(models.Model):
 
         # Update the customer's balance
         customer = Customer.objects.get(id=self.customer.id)
-        updated_balance = self.grand_total - self.amount_payed
+        updated_balance = abs(self.grand_total - self.amount_payed)
         o_balance = customer.balance
         customer.old_balance = o_balance
         customer.balance = updated_balance
@@ -63,3 +64,26 @@ class SaleDetail(models.Model):
 
     def __str__(self) -> str:
         return "Detail ID: " + str(self.id) + " Sale ID: " + str(self.sale.id) + " Quantity: " + str(self.quantity)
+
+
+class Transaction(models.Model):
+    TRANSACTION_TYPE_CHOICES = (  # new
+        ("Beginning Balance", "Beginning Balance"),
+        ("Sale", "Sale"),
+        ("Party To Party [Received]", "Party To Party [Received]"),
+        ("Ending Balance", "Ending Balance"),
+    )
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="customer_transactions")
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, null=True)
+    transaction_type = models.CharField(max_length=40, choices=TRANSACTION_TYPE_CHOICES)
+    invoice_bill_no = models.CharField(max_length=20, blank=True, null=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Sub Total
+    received_paid_amount = models.DecimalField(max_digits=10, decimal_places=2)  # Paid Amount
+    receivable_balance = models.DecimalField(max_digits=10, decimal_places=2)  # Remaining Balance - Grand Total
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return str(self.customer) + " " + self.transaction_type + " " + f"{self.invoice_bill_no or '-'}"
+
+    class Meta:
+        db_table = 'Transactions'

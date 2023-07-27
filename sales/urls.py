@@ -14,4 +14,12 @@ urlpatterns = [
     # Sale receipt PDF
     path("pdf/<str:sale_id>",
          views.ReceiptPDFView, name="sales_receipt_pdf"),
+    # To show all the transactions
+    path('transactions/', views.TransactionsView, name='transactions'),
+    # # To generate reports
+    # path('reports/', views.ReportsView, name='reports'),
+    # URL pattern to view customer transactions
+    path('customer/<int:customer_id>/transactions/', views.CustomerTransactionsView, name='customer_transactions'),
+    # To Add transaction manually
+    path('customer/<int:customer_id>/transactions/add/', views.add_transaction, name='add_cus_transaction'),
 ]

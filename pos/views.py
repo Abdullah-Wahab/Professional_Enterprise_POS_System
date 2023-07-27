@@ -40,8 +40,8 @@ def index(request):
         top_products_names.append(p.name)
         top_products_quantity.append(p.quantity_sum)
 
-    print(top_products_names)
-    print(top_products_quantity)
+    # print(top_products_names)
+    # print(top_products_quantity)
 
     context = {
         "active_icon": "dashboard",

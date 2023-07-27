@@ -150,7 +150,7 @@
                 titleAttr: 'Print',
                 className: 'btn btn-info',
                 exportOptions: {
-                    columns: [ 0, 1, 2, 3 ,4 ]
+                    columns: [ 0, 1, 2, 3 ,4, 5 ]
                 }            
                 },
                 {
@@ -159,7 +159,7 @@
                     titleAttr: 'Download Excel',
                     className: 'btn btn-success ml-2',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3 ,4 ]
+                        columns: [ 0, 1, 2, 3 ,4, 5 ]
                     } 
                 },
                 {
@@ -172,7 +172,7 @@
                     pageSize: 'A4',
                     title: '*',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3 ,4 ]
+                        columns: [ 0, 1, 2, 3 ,4, 5 ]
                     },
                     customize: function (doc) {
                         doc.styles = {
@@ -199,7 +199,7 @@
                                 alignment: 'center'
                             }
                         };
-                        doc.content[1].table.widths = ['10%', '10%', '30%', '30%', '20%'];
+                        doc.content[1].table.widths = ['10%', '10%', '25%', '30%', '15%', '10%'];
                         doc.content[1].margin = [0, 35, 0, 0];
                         doc.content[1].layout = {};
                         doc['footer'] = (function (page, pages) {

@@ -1,0 +1,39 @@
+{% extends "pos/base.html" %}
+
+{% block content %}
+  <h1>Customer Transactions</h1>
+  <table id="transactionsTable" class="display" style="width:100%">
+    <thead>
+      <tr>
+        <th>Customer</th>
+        <th>Transaction Type</th>
+        <th>Invoice/Bill No.</th>
+        <th>Total Amount</th>
+        <th>Received/Paid Amount</th>
+        <th>Receivable Balance</th>
+        <th>Created At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for transaction in transactions %}
+        <tr>
+          <td>{{ transaction.customer }}</td>
+          <td>{{ transaction.get_transaction_type_display }}</td>
+          <td>{{ transaction.invoice_bill_no|default:"-" }}</td>
+          <td>{{ transaction.total_amount|default:"-" }}</td>
+          <td>{{ transaction.received_paid_amount }}</td>
+          <td>{{ transaction.receivable_balance }}</td>
+          <td>{{ transaction.created_at }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+
+{% block script %}
+<script>
+  $(document).ready(function () {
+    $('#transactionsTable').DataTable();
+  });
+</script>
+{% endblock %}

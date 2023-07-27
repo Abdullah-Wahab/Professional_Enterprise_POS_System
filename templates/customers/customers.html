@@ -50,7 +50,12 @@
                         <tr>
                             <td>{{c.id}}</td>
                             <td>{{forloop.counter}}</td>
-                            <td>{{c.get_full_name}}</td>
+{#                            <td>{{c.get_full_name}}</td>#}
+                            <td>
+                                <a href="{% url 'sales:customer_transactions' c.id %}" class="text-decoration-none">
+                                    {{ c.get_full_name }}
+                                </a>
+                            </td>
                             <td>{{c.phone}}</td>
                             <td>{{c.balance}}</td>
                             <td>{{c.address}}</td>

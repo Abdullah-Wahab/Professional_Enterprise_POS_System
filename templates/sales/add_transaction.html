@@ -1,0 +1,50 @@
+<!-- sales/add_transaction.html -->
+{% extends "pos/base.html" %}
+
+<!-- Page title  -->
+{% block title %}Add Transaction{% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+<!-- Page Heading -->
+{% block heading %}Add Transaction{% endblock heading %}
+
+<!-- Page content  -->
+{% block content %}
+<!--Go back-->
+<div class="row ml-0 mb-3">
+    <a href="{% url 'sales:customer_transactions' customer.id %}">
+        <button type="button" class="btn btn-info font-weight-bold">
+            <i class="fas fa-long-arrow-alt-left mr-2"></i>
+            Go back
+        </button>
+    </a>
+</div>
+
+<div class="row">
+    <div class="card col-md-8">
+        <div class="card-body">
+            <form action="{% url 'sales:add_cus_transaction' customer.id %}" method="post">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="inputDescription">Transaction Type</label>
+                        <select name="transaction_type" class="form-control" readonly>
+                            <option value="Party To Party [Received]">Party To Party [Received]</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="inputDescription">Received Paid Amount</label>
+                        <input type="text" class="form-control" name="received_paid_amount" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success font-weight-bold">Create Transaction</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

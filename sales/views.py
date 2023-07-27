@@ -1,21 +1,23 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django_pos.wsgi import *
 from django_pos import settings
 from customers.models import Customer
 from products.models import Product
-from .models import Sale, SaleDetail
+from .models import Sale, SaleDetail, Transaction
 import json
 from django.templatetags.static import static
 from django.template.loader import get_template
 from django.http import HttpResponse
 import os
+from datetime import date, timedelta
+from decimal import Decimal
+from django.db.models import Sum
 
 os.add_dll_directory(r"C:\msys64\mingw64\bin")
 from weasyprint import HTML, CSS
-
 
 
 def is_ajax(request):
@@ -48,7 +50,7 @@ def SalesAddView(request):
                 "sub_total": float(data["sub_total"]),
                 "grand_total": float(data["grand_total"]),
                 "amount_payed": float(data["amount_payed"]),
-                "amount_change": float(data["amount_change"]),
+                "amount_change": abs(float(data["amount_change"])),
             }
             try:
                 # Create the sale
@@ -70,6 +72,19 @@ def SalesAddView(request):
                     sale_detail_new.save()
 
                 print("Sale saved")
+
+                # Add transaction for the sale
+                Transaction.objects.create(
+                    customer=new_sale.customer,
+                    sale=new_sale,
+                    transaction_type="Sale",
+                    invoice_bill_no=new_sale.invoice_number,
+                    total_amount=new_sale.sub_total,
+                    received_paid_amount=new_sale.amount_payed,
+                    receivable_balance=new_sale.amount_change,
+                )
+
+                print("Sale and Transaction saved")
 
                 response_data = {
                     "status": "success",
@@ -112,6 +127,7 @@ def SalesDetailsView(request, sale_id):
         print(e)
         return redirect('sales:sales_list')
 
+
 @login_required(login_url="/accounts/login/")
 def ReceiptPDFView(request, sale_id):
     """
@@ -142,3 +158,86 @@ def ReceiptPDFView(request, sale_id):
     pdf = HTML(string=html_template).write_pdf(stylesheets=[CSS(css_url)])
 
     return HttpResponse(pdf, content_type="application/pdf")
+
+
+# Showing all the transactions happened
+@login_required(login_url="/accounts/login/")
+def TransactionsView(request):
+    transactions = Transaction.objects.select_related('customer').order_by('-created_at')
+    context = {
+        "transactions": transactions,
+    }
+    return render(request, "sales/transactions.html", context=context)
+
+
+# @login_required(login_url="/accounts/login/")
+# def ReportsView(request):
+#     today = date.today()
+#     end_date = today.replace(day=1)
+#     start_date = end_date - timedelta(days=365)
+#
+#     monthly_reports = []
+#     while start_date < today:
+#         end_of_month = start_date.replace(day=28) + timedelta(days=4)
+#         end_date = end_of_month - timedelta(days=end_of_month.day)
+#         total_amount = Transaction.objects.filter(
+#             created_at__range=(start_date, end_date)
+#         ).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+#         opening_balance = Transaction.objects.filter(
+#             created_at__lt=start_date
+#         ).aggregate(Sum('receivable_balance'))['receivable_balance__sum'] or Decimal('0.00')
+#         ending_balance = opening_balance + (total_amount or Decimal('0.00'))
+#         monthly_reports.append({
+#             'start_date': start_date,
+#             'end_date': end_date,
+#             'opening_balance': opening_balance,
+#             'total_amount': total_amount,
+#             'ending_balance': ending_balance,
+#         })
+#         start_date = end_date + timedelta(days=1)
+#
+#     context = {
+#         "monthly_reports": monthly_reports,
+#     }
+#     return render(request, "sales/reports.html", context=context)
+
+
+@login_required(login_url="/accounts/login/")
+def CustomerTransactionsView(request, customer_id):
+    customer = get_object_or_404(Customer, id=customer_id)
+    transactions = Transaction.objects.filter(customer=customer)
+
+    context = {
+        'customer': customer,
+        'transactions': transactions,
+    }
+    return render(request, 'sales/customer_transactions.html', context)
+
+
+@login_required(login_url="/accounts/login/")
+def add_transaction(request, customer_id):
+    customer = get_object_or_404(Customer, id=customer_id)
+
+    if request.method == 'POST':
+        transaction_type = "Party To Party [Received]"
+        received_paid_amount = Decimal(request.POST.get('received_paid_amount'))
+
+        new_balance = customer.balance - received_paid_amount
+        customer.balance = new_balance
+        customer.save()
+
+        # Create the transaction object and save it to the database
+        Transaction.objects.create(
+            customer=customer,
+            transaction_type=transaction_type,
+            received_paid_amount=received_paid_amount,
+            receivable_balance=customer.balance,
+        )
+
+        # Redirect to the customer transactions page
+        return redirect('sales:customer_transactions', customer_id=customer.id)
+
+    context = {
+        'customer': customer,
+    }
+    return render(request, 'sales/add_transaction.html', context)

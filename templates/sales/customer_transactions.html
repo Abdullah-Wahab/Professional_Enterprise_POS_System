@@ -1,7 +1,7 @@
 {% extends "pos/base.html" %}
 {% load static %}
 <!-- Page title  -->
-{% block title %}Sales{% endblock title %}
+{% block title %}Transactions{% endblock title %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -10,26 +10,33 @@
 <link href="{% static 'css/pagination_buttons.css ' %}" rel="stylesheet">
 {% endblock stylesheets %}
 
-<!-- Page Heading -->
-{% block heading %}Sales{% endblock heading %}
+{% block heading %}{{ customer.get_full_name }} - Transactions{% endblock heading %}
 
-<!-- Page content  -->
 {% block content %}
 
-    <!--Create new sale-->
-    <div class="row ml-0 mb-3">
-        <a href="{% url 'sales:sales_add' %}">
+    <!--Go back-->
+<div class="row ml-0 mb-3">
+    <a href="{% url 'customers:customers_list' %}">
+        <button type="button" class="btn btn-info font-weight-bold">
+            <i class="fas fa-long-arrow-alt-left mr-2"></i>
+            Go back
+        </button>
+    </a>
+<!--Create new transaction-->
+    <div class="row ml-3 mb-3">
+        <a href="{% url 'sales:add_cus_transaction' customer.id %}">
             <button type="button" class="btn btn-success font-weight-bold">
                     <i class="fas fa-plus mr-2"></i>
-                    Create new sale
+                    Enter New Transaction
             </button>
         </a>
     </div>
+</div>
 
-    <!-- DataTable -->
+   <!-- DataTable -->
     <div class="card shadow mb-12">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Customers</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Transactions</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -37,38 +44,24 @@
                     <thead>
                         <tr>
                             <th style="width:5%">#</th>
-                            <th style="width:5%">Invoice Number</th>
-                            <th style="width:10%">Customer</th>
-                            <th style="width:15%">Date</th>
-                            <th class="text-center" style="width:10%">Total</th>
-                            <th class="text-center" style="width:5%">Items</th>
-                            <th class="text-center" style="width:10%">Actions</th>
-{#                            <th class="text-center" style="width:10%">Generate Report</th>#}
+                            <th style="width:20%">Date</th>
+                            <th style="width:15%">Transaction Type</th>
+                            <th style="width:10%">Invoice / Bill No.</th>
+                            <th style="width:15%">Total Amount</th>
+                            <th style="width:15%">Received / Paid Amount</th>
+                            <th style="width:15%">Receivable Balance</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for s in sales|dictsortreversed:"date_added" %}
+                        {% for transaction in transactions|dictsortreversed:"created_at" %}
                         <tr>
                             <td>{{forloop.counter}}</td>
-                            <td>{{s.invoice_number}}</td>
-                            <td>{{s.customer.get_full_name}}</td>
-                            <td>{{s.date_added}}</td>
-                            <td class="text-right" >{{s.sub_total}}</td>
-                            <td class="text-center" >{{s.sum_items}}</td>
-                            <td class="text-center">
-                                <!--View-->
-                                <a href="{% url 'sales:sales_details' s.id %}" class="text-decoration-none">
-                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Update sale">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </a>
-                                <!--Print receipt-->
-                                <a href="{% url 'sales:sales_receipt_pdf' s.id %}" class="text-decoration-none" target="_blank">
-                                    <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="tooltip" title="View Receipt">
-                                        <i class="fas fa-receipt"></i>
-                                    </button>
-                                </a>
-                            </td>
+                            <td>{{ transaction.created_at }}</td>
+                            <td>{{ transaction.transaction_type }}</td>
+                            <td>{{ transaction.invoice_bill_no|default:"-" }}</td>
+                            <td>{{ transaction.total_amount|default:"-" }}</td>
+                            <td>{{ transaction.received_paid_amount }}</td>
+                            <td>{{ transaction.receivable_balance }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -76,7 +69,8 @@
             </div>
         </div>
     </div>
-{% endblock content %}
+{% endblock %}
+
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
@@ -94,7 +88,6 @@
 <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.print.min.js"></script>
 <!--Moment JS-->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-
 <!--Datatables-->
 <script>
     // Call the dataTables jQuery plugin
@@ -108,8 +101,8 @@
                 titleAttr: 'Print',
                 className: 'btn btn-info',
                 exportOptions: {
-                    columns: [ 0, 1, 2, 3 ,4, 5]
-                }            
+                    columns: [ 0, 1, 2, 3 ,4, 5, 6 ]
+                }
                 },
                 {
                     extend: 'excelHtml5',
@@ -117,8 +110,8 @@
                     titleAttr: 'Download Excel',
                     className: 'btn btn-success ml-2',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3 ,4, 5 ]
-                    } 
+                        columns: [ 0, 1, 2, 3 ,4, 5, 6 ]
+                    }
                 },
                 {
                     extend: 'pdfHtml5',
@@ -128,9 +121,9 @@
                     download: 'open',
                     orientation: 'vertical',
                     pageSize: 'A4',
-                    title: '*',
+                    title: '{{ customer.get_full_name }} - Transactions',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3 ,4 ,5]
+                        columns: [ 0, 1, 2, 3, 4, 5, 6 ]
                     },
                     customize: function (doc) {
                         doc.styles = {
@@ -154,10 +147,12 @@
                                 fontSize: 11,
                                 color: 'white',
                                 fillColor: '#2d4154',
-                                alignment: 'center'
+                                alignment: 'center',
+                                valign: 'middle'
                             }
                         };
-                        doc.content[1].table.widths = ['10%', '10%', '30%', '20%', '20%', '10%'];
+
+                        doc.content[1].table.widths = ['5%', '25%', '25%', '10%', '10%', '10%','15%'];
                         doc.content[1].margin = [0, 35, 0, 0];
                         doc.content[1].layout = {};
                         doc['footer'] = (function (page, pages) {
@@ -169,7 +164,7 @@
                                     },
                                     {
                                         alignment: 'right',
-                                        text: ['page ', {text: page.toString()}, ' de ', {text: pages.toString()}]
+                                        text: ['page ', {text: page.toString()}, ' of ', {text: pages.toString()}]
                                     }
                                 ],
                                 margin: 20
@@ -181,8 +176,13 @@
             ],
             deferRender: true,
             {#lengthMenu: [[-1], ["All"]],#} // it also can be used for showing all products on 1 page
-            paging: true,
+            paging: false,
             columnDefs: [
+                {
+                    targets: [0],
+                    visible: true,
+                    searchable: false,
+                },
                 {
                     targets: [-1], // column index (start from 0)
                     orderable: false, // set orderable false for selected columns
