@@ -17,7 +17,7 @@ from decimal import Decimal
 from django.db.models import Sum
 
 # os.add_dll_directory(r"C:\msys64\mingw64\bin")
-from weasyprint import HTML, CSS
+# from weasyprint import HTML, CSS
 
 
 def is_ajax(request):
