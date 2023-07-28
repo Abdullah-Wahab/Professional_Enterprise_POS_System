@@ -16,7 +16,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from django.db.models import Sum
 
-os.add_dll_directory(r"C:\msys64\mingw64\bin")
+# os.add_dll_directory(r"C:\msys64\mingw64\bin")
 from weasyprint import HTML, CSS
 
 
@@ -97,7 +97,7 @@ def SalesAddView(request):
                 messages.success(
                     request, 'There was an error during the creation!', extra_tags="danger")
 
-        return redirect('sales:sales_list')
+        return redirect('sales:sales_add')
 
     return render(request, "sales/sales_add.html", context=context)
 
@@ -130,6 +130,8 @@ def SalesDetailsView(request, sale_id):
 
 @login_required(login_url="/accounts/login/")
 def ReceiptPDFView(request, sale_id):
+    from django.http import FileResponse
+
     """
     Args:
         sale_id: ID of the sale to view the receipt
@@ -157,7 +159,16 @@ def ReceiptPDFView(request, sale_id):
     # Create the pdf
     pdf = HTML(string=html_template).write_pdf(stylesheets=[CSS(css_url)])
 
-    return HttpResponse(pdf, content_type="application/pdf")
+    # Set a custom filename for the downloaded PDF
+    filename = f"{sale.customer.get_full_name()} - Receipt.pdf"
+
+    # Use FileResponse to return the PDF with the custom filename
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    return response
+
+    # return HttpResponse(pdf, content_type="application/pdf")
 
 
 # Showing all the transactions happened

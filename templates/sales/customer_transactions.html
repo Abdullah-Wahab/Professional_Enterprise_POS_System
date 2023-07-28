@@ -8,6 +8,12 @@
 <!-- Datatables -->
 <link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css ' %}" rel="stylesheet">
 <link href="{% static 'css/pagination_buttons.css ' %}" rel="stylesheet">
+
+    <!-- jQuery UI for datepicker -->
+<link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+    <!-- DateRangePicker -->
+<link href="https://cdn.jsdelivr.net/npm/daterangepicker@3.0.5/daterangepicker.css" rel="stylesheet">
+
 {% endblock stylesheets %}
 
 {% block heading %}{{ customer.get_full_name }} - Transactions{% endblock heading %}
@@ -31,6 +37,12 @@
             </button>
         </a>
     </div>
+
+<div class="row mr-3 ml-auto">
+  <div>
+    <input type="text" id="dateRangePicker" name="dateRange" class="form-control" autocomplete="off" placeholder="Select date range">
+  </div>
+</div>
 </div>
 
    <!-- DataTable -->
@@ -47,21 +59,40 @@
                             <th style="width:20%">Date</th>
                             <th style="width:15%">Transaction Type</th>
                             <th style="width:10%">Invoice / Bill No.</th>
-                            <th style="width:15%">Total Amount</th>
-                            <th style="width:15%">Received / Paid Amount</th>
+                            <th style="width:10%">Total Amount</th>
+                            <th style="width:15%">Received Amount</th>
                             <th style="width:15%">Receivable Balance</th>
+                            <th style="width:15%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for transaction in transactions|dictsortreversed:"created_at" %}
                         <tr>
                             <td>{{forloop.counter}}</td>
-                            <td>{{ transaction.created_at }}</td>
+                            <td>{{ transaction.created_at|date:"Y-m-d" }}</td>
                             <td>{{ transaction.transaction_type }}</td>
                             <td>{{ transaction.invoice_bill_no|default:"-" }}</td>
                             <td>{{ transaction.total_amount|default:"-" }}</td>
                             <td>{{ transaction.received_paid_amount }}</td>
                             <td>{{ transaction.receivable_balance }}</td>
+                            <td class="text-center">
+                                <!--View-->
+                                {% if transaction.sale %}
+                                <a href="{% url 'sales:sales_details' transaction.sale.id %}" class="text-decoration-none">
+                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="tooltip" title="Update sale">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </a>
+                                <!--Print receipt-->
+                                <a href="{% url 'sales:sales_receipt_pdf' transaction.sale.id %}" class="text-decoration-none" target="_blank">
+                                    <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="tooltip" title="View Receipt">
+                                        <i class="fas fa-receipt"></i>
+                                    </button>
+                                </a>
+                                {% else %}
+                                    <span class="text-muted"> <b>No Sale</b> </span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -88,10 +119,32 @@
 <script type="text/javascript" src="https://cdn.datatables.net/buttons/2.3.3/js/buttons.print.min.js"></script>
 <!--Moment JS-->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<!--jQuery UI for datepicker-->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<!-- DateRangePicker -->
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.0.5/daterangepicker.min.js"></script>
 <!--Datatables-->
 <script>
+    let tblCategories;
+
+    // Function to filter the data based on the selected date range
+    function filterByDateRange(startDate, endDate) {
+        tblCategories.column(1).search(startDate + '|' + endDate, true, false).draw();
+    }
+
     // Call the dataTables jQuery plugin
     $(document).ready(function() {
+
+        // Initialize the DateRangePicker
+    $('#dateRangePicker').daterangepicker({
+        autoUpdateInput: false,
+        locale: {
+            cancelLabel: 'Clear',
+        },
+        startDate: moment().subtract(7, 'days'), // Set a default start date (7 days ago)
+        endDate: moment(), // Set a default end date (today)
+        opens: 'left', // Open the calendar on the left side of the input field
+        });
         tblCategories = $('#dataTable').DataTable({
             dom: 'Bfrtip', // Buttons are draw at this element
             buttons: [
@@ -123,7 +176,7 @@
                     pageSize: 'A4',
                     title: '{{ customer.get_full_name }} - Transactions',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3, 4, 5, 6 ]
+                        columns: [ 1, 2, 3, 4, 5, 6 ]
                     },
                     customize: function (doc) {
                         doc.styles = {
@@ -146,15 +199,121 @@
                                 bold: true,
                                 fontSize: 11,
                                 color: 'white',
-                                fillColor: '#2d4154',
+                                fillColor: '#34B655',
                                 alignment: 'center',
                                 valign: 'middle'
+                            },
+                            tableData: {
+                                alignment: 'center',
                             }
                         };
 
-                        doc.content[1].table.widths = ['5%', '25%', '25%', '10%', '10%', '10%','15%'];
-                        doc.content[1].margin = [0, 35, 0, 0];
-                        doc.content[1].layout = {};
+                        // Company name as the title
+                        doc.content.unshift({
+                            text: 'Abdul Rehman : 0300-9693370 \n Asad ur Rehman : 0322-2221645',
+                            style: 'companyName',
+                        });
+
+                         // Initialize variables for opening and net balance
+                        var openingBalance = 0;
+                        var netBalance = 0;
+
+                        // Find the column index of the "receivable_balance" column by searching for the header text
+                        var receivableBalanceColumnIndex = -1;
+                        var headerRow = $('#dataTable thead tr:first th');
+                        headerRow.each(function(index, element) {
+                            if ($(element).text().trim() === 'Receivable Balance') {
+                                receivableBalanceColumnIndex = index;
+                                return false; // Exit the loop
+                            }
+                        });
+
+                        // Get the last and first values of the "receivable_balance" column
+                        var rows = tblCategories.rows({ search: 'applied' }).data().toArray();
+                        if (rows.length > 0 && receivableBalanceColumnIndex !== -1) {
+                            var lastReceivableBalance = parseFloat(rows[rows.length - 1][receivableBalanceColumnIndex]);
+                            var firstReceivableBalance = parseFloat(rows[0][receivableBalanceColumnIndex]);
+
+                            // Convert the values to numbers (if needed)
+                            openingBalance = lastReceivableBalance;
+                            netBalance = firstReceivableBalance;
+                        }
+
+                                // Add the opening balance and net balance to the PDF content
+                        doc.content.push({
+                            columns: [
+                                { width: '*', text: 'Opening Balance:'},
+                                { width: '*', text: formatAmountInPKR(openingBalance) }, // Show opening balance in Pakistani style
+                            ],
+                            alignment: 'center',
+                            margin: [0, 10, 0, 5],
+                            color: '#34B655',
+                            fontSize: 15,
+                            bold: true,
+                        });
+
+                        doc.content.push({
+                            columns: [
+                                { width: '*', text: 'Net Balance:' },
+                                { width: '*', text: formatAmountInPKR(netBalance) }, // Show net balance in Pakistani style
+                            ],
+                            alignment: 'center',
+                            margin: [0, 10, 0, 5],
+                            color: '#34B655',
+                            fontSize: 15,
+                            bold: true,
+                        });
+                        // Function to format the amount in Pakistani style
+                        function formatAmountInPKR(amount) {
+                            var formattedAmount = parseFloat(amount).toLocaleString('en-PK', {
+                               maximumFractionDigits: 0,
+                                style: 'currency',
+                                currency: 'PKR',
+                            });
+
+                            // Remove the currency symbol to display only the numeric value
+                            return formattedAmount.replace('PKR', '').trim();
+                        }
+
+
+                        // Styles for the additional content
+                        doc.styles.companyNameTitle = {
+                            fontSize: 24,
+                            bold: true,
+                            alignment: 'center',
+                            margin: [0, 0, 0, 10]
+                        };
+
+                        doc.content.unshift({
+                            text: 'ABDUL REHMAN LOCK MAKERS',
+                            style: 'companyNameTitle'
+                        });
+
+                        // Styles for the additional content
+                        doc.styles.companyName = {
+                            fontSize: 10,
+                            bold: false,
+                            alignment: 'center',
+                            margin: [0, 10, 0, 20]
+                        };
+
+                        // Center alignment for all cells in the table
+                        doc.content[3].table.body.forEach(row => {
+                            row.forEach(cell => {
+                                cell.alignment = 'center';
+                            });
+                        });
+
+                        // Add horizontal lines between rows
+                        doc.content[3].table.body.forEach(row => {
+                            row.forEach(cell => {
+                                cell.border = [false, false, false, true]; // [left, top, right, bottom]
+                            });
+                        });
+
+                        doc.content[3].table.widths = ['15%', '25%', '10%', '15%', '15%','20%'];
+                        doc.content[3].margin = [0, 10, 0, 40];
+                        doc.content[3].layout = {};
                         doc['footer'] = (function (page, pages) {
                             return {
                                 columns: [
@@ -189,6 +348,21 @@
                 }
             ],
         });
+
+        // Event listener for applying the date range filter
+    $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+        var startDate = picker.startDate.format('YYYY-MM-DD');
+        var endDate = picker.endDate.format('YYYY-MM-DD');
+        console.log(startDate, endDate)
+        filterByDateRange(startDate, endDate);
     });
+
+    // Event listener for clearing the date range filter
+    $('#dateRangePicker').on('cancel.daterangepicker', function() {
+        var startDate = '';
+        var endDate = '';
+        filterByDateRange(startDate, endDate);
+    });
+});
 </script>
 {% endblock javascripts %}
