@@ -6,7 +6,7 @@
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
 <!-- Datatables -->
-<link src="{% static 'vendor/datatables/dataTables.bootstrap4.min.css ' %}" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css ' %}">
 <!--Select2 CSS-->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css">
@@ -99,7 +99,7 @@
                                 {% csrf_token %}
                                 <div class="form-group">
                                     <label for="customer">Customer</label>
-                                    <select name="customer" class="form-control" id="searchbox_customers">
+                                    <select name="customer" class="form-control" id="searchbox_customers" required>
                                         <option value="" selected disabled hidden>Select the customer</option>
                                         {% for customer in customers %}
                                             <option value="{{customer.value}}">{{customer.label}} {{customer.number}}</option>
@@ -426,11 +426,13 @@
                 console.log(sale.items);      
                 //Clean the searchbox after the product is selected
                 $(this).val('').trigger('change.select2');
-                $(this).select2('open');
+                {#$(this).select2('open');#}
+                // Set focus on the quantity input field
+                setFocusOnQuantity();
             });
         $(document).on("select2:open", () => {
           document.querySelector(".select2-container--open .select2-search__field").focus()
-        })
+         })
 
             $(document).ready(function() {
                 $('#searchbox_customers').on('change', function() {
@@ -577,6 +579,29 @@
             });
             
         });
+
+        function setFocusOnProductSearch() {
+            // Select the product search input field and set focus on it
+            $('#searchbox_products').select2('open');
+        }
+
+        // Function to set focus on the quantity input field
+        function setFocusOnQuantity() {
+            // Select the quantity input field in the last row of the table
+            var lastRow = $('#table_products').find('tbody tr:last');
+            var quantityInput = lastRow.find('input[name="quantity"]')
+            quantityInput.val('');
+            quantityInput.focus();
+        }
+
+        // Prevent form submission on Enter key press in the quantity input field
+        $(document).on('keydown', 'input[name="quantity"]', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                setFocusOnProductSearch(); // Set focus back to the product search input
+            }
+        });
+
         $(document).ready(function() { 
             // ...
             // Add event listener to update total amount on price change
