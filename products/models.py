@@ -9,7 +9,7 @@ class Category(models.Model):
     )
 
     name = models.CharField(max_length=256)
-    description = models.TextField(max_length=256)
+    description = models.TextField(max_length=256, null=True, blank=True)
     status = models.CharField(
         choices=STATUS_CHOICES,
         max_length=100,
@@ -32,7 +32,7 @@ class Product(models.Model):
     )
 
     name = models.CharField(max_length=256)
-    description = models.TextField(max_length=256)
+    description = models.TextField(max_length=256, null=True, blank=True)
     status = models.CharField(
         choices=STATUS_CHOICES,
         max_length=100,
