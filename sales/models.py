@@ -24,12 +24,11 @@ class Sale(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            used_numbers = set(Sale.objects.values_list('invoice_number', flat=True))
-            while True:
-                invoice_number = random.randint(10000, 999999)
-                if invoice_number not in used_numbers:
-                    self.invoice_number = invoice_number
-                    break
+            # Get the maximum invoice number from the existing sales
+            max_invoice_number = Sale.objects.aggregate(models.Max('invoice_number'))['invoice_number__max']
+
+            # If no sales with invoice numbers exist, start with 1, otherwise increment by 1
+            self.invoice_number = 1 if max_invoice_number is None else max_invoice_number + 1
         super().save(*args, **kwargs)
 
         # Update the customer's balance

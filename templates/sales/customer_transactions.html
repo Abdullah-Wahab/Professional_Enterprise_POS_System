@@ -8,6 +8,8 @@
 <!-- Datatables -->
 <link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css ' %}">
 <link rel="stylesheet" href="{% static 'css/pagination_buttons.css ' %}">
+{#    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">#}
+{#<link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">#}
     <link href="https://cdn.datatables.net/datetime/1.5.1/css/dataTables.dateTime.min.css" rel="stylesheet">
 
     <!-- jQuery UI for datepicker -->
@@ -46,12 +48,12 @@
      <table border="0" cellspacing="5" cellpadding="5">
             <tbody>
             <tr>
-                <td>Minimum date:</td>
-                <td><input type="text" id="min" name="min"></td>
+                <td>Start date:</td>
+                <td><input type="text" id="startdate" class="date_range_filter"></td>
             </tr>
             <tr>
-                <td>Maximum date:</td>
-                <td><input type="text" id="max" name="max"></td>
+                <td>End date:</td>
+                <td><input type="text" id="enddate" class="date_range_filter"></td>
             </tr>
         </tbody>
      </table>
@@ -119,6 +121,8 @@
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 <!-- Datatables -->
+<script src="https://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="https://code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 <!--Datatable buttons-->
@@ -134,35 +138,23 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js"></script>
 <!--jQuery UI for datepicker-->
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+{#    <script type="application/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>#}
+{#<script type="application/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>#}
+{#<script type="application/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>#}
+{#    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>#}
 {#    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>#}
+{#    <script src="https://code.jquery.com/jquery-1.9.1.js"></script>#}
+{#    <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.js"></script>#}
 <!-- DateRangePicker -->
-    <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.0.5/daterangepicker.min.js"></script>
+{#    <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.0.5/daterangepicker.min.js"></script>#}
     <!-- DATETIME -->
     <script src="https://cdn.datatables.net/datetime/1.5.1/js/dataTables.dateTime.min.js"></script>
-<!--Datatables-->
+    <!--Datatables-->
 <script>
     let tblCategories;
 
-    {% comment %}// Function to filter the data based on the selected date range
-    function filterByDateRange(startDate, endDate) {
-        tblCategories.column(1).search(startDate + '|' + endDate, true, false).draw();
-    }{% endcomment %}
-
     // Call the dataTables jQuery plugin
     $(document).ready(function() {
-        {#console.log(minDate, maxDate)#}
-
-        // Initialize the DateRangePicker
-    {% comment %}$('#dateRangePicker').daterangepicker({
-        autoUpdateInput: false,
-        locale: {
-            cancelLabel: 'Clear',
-        },
-        startDate: moment().subtract(7, 'days'), // Set a default start date (7 days ago)
-        endDate: moment(), // Set a default end date (today)
-        opens: 'left', // Open the calendar on the left side of the input field
-        });{% endcomment %}
 
         tblCategories = $('#dataTable').DataTable({
             dom: 'Bfrtip', // Buttons are draw at this element
@@ -354,7 +346,7 @@
             ],
             deferRender: true,
             {#lengthMenu: [[-1], ["All"]],#} // it also can be used for showing all products on 1 page
-            paging: false,
+            paging: true,
             columnDefs: [
                 {
                     targets: [0],
@@ -368,57 +360,55 @@
             ],
         });
 
-        // Event listener for applying the date range filter
-    {% comment %}$('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
-        var startDate = picker.startDate.format('YYYY-MM-DD');
-        var endDate = picker.endDate.format('YYYY-MM-DD');
-        console.log(startDate, endDate)
-        filterByDateRange(startDate, endDate);
-    });{% endcomment %}
-
-    // Event listener for clearing the date range filter
-    {% comment %}$('#dateRangePicker').on('cancel.daterangepicker', function() {
-        var startDate = '';
-        var endDate = '';
-        filterByDateRange(startDate, endDate);
-    });{% endcomment %}
-
-        // Event listeners for applying the date range filter
-         let minDate, maxDate;
-
-        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-            let min = minDate.val();
-            let max = maxDate.val();
-            let date = new Date(data[1]);
-
-            if (
-                (min === null && max === null) ||
-                (min === null && date <= max) ||
-                (min <= date && max === null) ||
-                (min <= date && date <= max)
-            ) {
-                return true;
-            }
-            return false;
+        // I instantiate the two datepickers here, instead of all at once like before.
+        // I also changed the dateFormat to match the format of the dates in the data table.
+        $("#startdate").datepicker({
+          "dateFormat": "yy-mm-dd",
+          "onSelect": function(date) {  // This handler kicks off the filtering.
+            minDateFilter = new Date(date).getTime();
+            tblCategories.draw(); // Redraw the table with the filtered data.
+          }
+        }).keyup(function() {
+          minDateFilter = new Date(this.value).getTime();
+          tblCategories.draw();
         });
 
-        // Create date inputs
-        minDate = $("#min").datepicker({
-            dateFormat: "yy-mm-dd",
-            onSelect: function () {
-                tblCategories.draw();
-            },
-        });
-        maxDate = $("#max").datepicker({
-            dateFormat: "yy-mm-dd",
-            onSelect: function () {
-                tblCategories.draw();
-            },
-        });
-
-        $("#min, #max").on("change", function () {
+        $("#enddate").datepicker({
+          "dateFormat": "yy-mm-dd",
+          "onSelect": function(date) {
+            maxDateFilter = new Date(date).getTime();
             tblCategories.draw();
+          }
+        }).keyup(function() {
+          maxDateFilter = new Date(this.value).getTime();
+          tblCategories.draw();
         });
+
+        // The below code actually does the date filtering.
+        minDateFilter = "";
+        maxDateFilter = "";
+
+        $.fn.dataTableExt.afnFiltering.push(
+          function(oSettings, aData, iDataIndex) {
+            if (typeof aData._date == 'undefined') {
+              aData._date = new Date(aData[1]).getTime(); // Your date column is 3, hence aData[3].
+            }
+
+            if (minDateFilter && !isNaN(minDateFilter)) {
+              if (aData._date < minDateFilter) {
+                return false;
+              }
+            }
+
+            if (maxDateFilter && !isNaN(maxDateFilter)) {
+              if (aData._date > maxDateFilter) {
+                return false;
+              }
+            }
+
+            return true;
+          }
+        );
 });
 </script>
 {% endblock javascripts %}
