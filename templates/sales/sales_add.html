@@ -41,15 +41,6 @@
                             <div class="card-header">Sale products</div>
 
                             <div class="card-body">
-                                <!--Search product-->
-{#                                <div class="form-group">#}
-{#                                    <label>Search product:</label>#}
-{#                                    <div class="input-group">#}
-{#                                        <select class="form-control select2" name="searchbox_products" id="searchbox_products"></select>#}
-{#                                    </div>#}
-{#                                </div>#}
-                                <!--End Search product-->
-
                                 <!--Delete all products from sale-->
                                 <button type="button" class="mb-4 btn btn-danger btn-sm deleteAll">
                                     Delete all added products <i class="ml-1 fas fa-trash-alt fa-xs"></i>
@@ -65,6 +56,7 @@
                                                 <th>Name</th>
                                                 <th>Price/Unit</th>
                                                 <th>Quantity</th>
+                                                <th>Unit</th>
                                                 <th>Total</th>
                                                 <th class="text-center">Delete</th>
                                                 </tr>
@@ -142,6 +134,8 @@
         </div>
 
     </div>
+        </div>
+    </div>
 </form>
 {% endblock content %}
 
@@ -192,9 +186,19 @@
             // Calculates the total for each product
             $.each(this.items.products, function(pos, dict){
                 dict.pos = pos;
-                dict.total_product = roundTo(dict.quantity * dict.price, 2);
+                // Calculate total based on unit
+                if (dict.unit === 'Doz') {
+                    dict.total_product = roundTo(dict.quantity * dict.price * 12, 2);
+                } else {
+                    dict.total_product = roundTo(dict.quantity * dict.price, 2);
+                }
+
                 // Add the product total to the sale subtotal
                 sub_total += roundTo(dict.total_product, 2);
+
+                // Set the value for the corresponding input field
+                $('input[name="total_product"]').eq(pos).val(dict.total_product.toFixed(2));
+
             });
 
             //Update the sale subtotal, grand total, and tax amount
@@ -205,7 +209,9 @@
             $('input[name="grand_total"]').val(this.items.grand_total);
         },
         // Adds a product to the sale object
-        add_product: function (item) {
+        add_product: function (item, selectedUnit) {
+            // Store the selected unit for the product
+            item.selectedUnit = selectedUnit;
             this.items.products.push(item);
             this.list_product();
         },
@@ -223,17 +229,22 @@
                     {"data": "name"},
                     //{"data": "price"},
                     {
-                        "data": "price",
+                        "data": "price", "width" : "10%",
                         render: function (data, type, row) {
                             return '<input name="price" type="text" class="form-control form-control-xs text-right input-sm" autocomplete="off" value="' + parseFloat(data).toFixed(2) + '">';
                         },
                     },
                     {"data": "quantity"},
                     {
-                        "data": "total_product",
+                        "data": "unit", "width" : "15%",
+                    },
+                    {
+                        "data": "total_product", "width": "15%",
                         render: function (data, type, row) {
-                            return '<span class="total-amount">' + parseFloat(data).toFixed(2) + ' ₨</span>';
-                        },
+                            console.log("Column for total product")
+                            //return '<span class="total-amount">' + parseFloat(data).toFixed(2) + ' ₨</span>';
+                            return '<input name="total_product" type="text" class="form-control form-control-xs text-right input-sm" readonly autocomplete="off" value="' + parseFloat(data).toFixed(2) + '">';
+                            },
                     },
                     {"data": "id"},
                 ],
@@ -241,17 +252,28 @@
                     {
                         // Quantity
                         class: 'text-center',
-                        targets: [3], 
+                        targets: [3],
                         render: function (data, type, row){
                             return '<input name="quantity" type="text" class="form-control form-control-xs text-center input-sm" autocomplete="off" value="'+row.quantity+'">';
-                        },                      
+                        },
+                    },
+                    {
+                        // UNIT
+                        class: 'text-center',
+                        targets: [4],
+                      render: function(data, type, row) {
+                            return '<select name="unit" class="form-control form-control-xs text-center input-sm unit-dropdown" data-default="' + data + '">' +
+                                   '<option value="Pcs" class="text-left" ' + (data === 'Pcs' ? 'selected' : '') + '>PCS</option>' +
+                                   '<option value="Doz" class="text-left" ' + (data === 'Doz' ? 'selected' : '') + '>DOZ</option>' +
+                                   '</select>';
+                        },
                     },
                     {
                         //Product price an total
-                        class: 'text-right',
-                        targets: [2,4],
+                        class: 'text-center',
+                        targets: [2,5],
                         render: function (data, type, row){
-                            return parseFloat(data).toFixed(2) + ' ₨';
+                            return parseFloat(data).toFixed(2);
                         },
                     },
                     {
@@ -288,6 +310,38 @@
             allowClear: true,
         });
 
+        $('#table_products').on('change', 'select[name="unit"]', function() {
+            var selectedUnit = $(this).val();
+            var table = $('#table_products').DataTable();
+            var row = table.row($(this).closest('tr')); // Get the DataTable row object
+            var pos = row.index(); // Get the row index
+            console.log("Selected unit:", selectedUnit);
+
+            if (pos >= 0) {
+                sale.items.products[pos].unit = selectedUnit; // Update the unit for the specific product
+
+                // Recalculate the sale
+                sale.calculate_sale();
+            } else {
+                console.error("Product position not found");
+            }
+        });
+
+        // Initialize the Select2 plugin for the "Unit" dropdown
+    $('#table_products').on('init.dt', function() {
+        // console.log("init.dt event triggered"); // Check if this is logged
+
+        // Set default selected value for the "Unit" dropdown
+        $('.unit-dropdown').each(function() {
+            var defaultValue = $(this).data('default');
+            console.log("Default value:", defaultValue); // Check if this is logged
+            $(this).val(defaultValue).trigger('change');
+        });
+
+
+    });
+
+
         // Tables Events
         $('#table_products tbody').on('click', 'a[rel="delete"]', function () {
                 // When a product is deleted
@@ -313,7 +367,7 @@
                 }).then((result) => {
                     // Si se confirma
                     if (result.isConfirmed) {
-                        
+
                         // Delete the product
                         sale.items.products.splice(tr.row, 1);
                         //List the table again
@@ -330,17 +384,18 @@
                 //console.log(quantity);
                 // Row variable of the table
                 var tr = tblProducts.cell($(this).closest('td, li')).index();
-                console.log(tr);
+                //console.log(tr);
                 //var data = tblProductos.row(tr.row).node();
                 //console.log(data);
                 // Update the product quantity in the sale object
                 sale.items.products[tr.row].quantity = quantity;
-                console.log(sale.items.products);
+                //console.log(sale.items.products);
                 // Calculate the sale with the new quantity
                 sale.calculate_sale();
                 // Find the row to update the product total
-                $('td:eq(4)', tblProducts.row(tr.row).node()).html(sale.items.products[tr.row].total_product + ' ₨');
-        });
+                // $('td:eq(5)', tblProducts.row(tr.row).node()).html(sale.items.products[tr.row].total_product + ' ₨');
+                $('input[name="total_product"]', tblProducts.row(tr.row).node()).val(sale.items.products[tr.row].total_product);
+            });
 
         // Delete all products
         $('.deleteAll').on('click', function(){
@@ -395,7 +450,7 @@
             minimumInputLength: 1,
             allowClear: true,
             templateResult: template_product_searchbox,
-            ajax:{ 
+            ajax:{
                 url: "{% url 'products:get_products' %}",
                 type: 'POST',
                 data: function (params) {
@@ -406,7 +461,7 @@
                 return queryParameters;
                 },
                 processResults: function (data) {
-                    console.log(data)
+                    // console.log(data)
                     return {
                         results: data
                     };
@@ -422,8 +477,8 @@
                 //data.quantity = 1;
                 //Add the product to the sale object
                 sale.add_product(data);
-                console.log("Sale items");      
-                console.log(sale.items);      
+                //console.log("Sale items");
+                //console.log(sale.items);
                 //Clean the searchbox after the product is selected
                 $(this).val('').trigger('change.select2');
                 {#$(this).select2('open');#}
@@ -457,10 +512,10 @@
                     }
                 });
             });
-            
+
 
             // Products datatable
-            
+
             tblProducts = $('#table_products').DataTable({
                 columnDefs: [
                     {
@@ -489,7 +544,7 @@
                     '</div>' +
                   '</div>' +
                 '</div>');
-        
+
             return option;
         }
 
@@ -518,14 +573,14 @@
 
             // Agregamos los datos faltantes al objeto sales
             sale.items.customer = $('select[name="customer"]').val();
-            console.log("Customer: " + sale.items.customer)
+            // console.log("Customer: " + sale.items.customer)
             sale.items.sub_total = $('input[name="sub_total"]').val();
             sale.items.grand_total = $('input[name="grand_total"]').val();
-            sale.items.amount_payed = $('input[name="amount_payed"]').val(); 
-            sale.items.amount_change = roundTo($('input[name="amount_payed"]').val() - $('input[name="grand_total"]').val(), 2); 
+            sale.items.amount_payed = $('input[name="amount_payed"]').val();
+            sale.items.amount_change = roundTo($('input[name="amount_payed"]').val() - $('input[name="grand_total"]').val(), 2);
 
-            console.log("Sale:")
-            console.log(sale.items)
+            //console.log("Sale:")
+            //console.log(sale.items)
 
             // Validate the csrf_token
             var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
@@ -545,7 +600,7 @@
                 url: "{% url 'sales:sales_add' %}",
                 type: "POST",
                 // We need to convert the JS object sale to string
-                data: JSON.stringify(sale.items), 
+                data: JSON.stringify(sale.items),
                 datatype: "json",
                 processData: false,
                 contentType: false,
@@ -577,44 +632,68 @@
                 console.log ("Ajax Fail");
                 alert(textStatus + ':' + errorThrown);
             });
-            
+
         });
 
-        function setFocusOnProductSearch() {
-            // Select the product search input field and set focus on it
-            $('#searchbox_products').select2('open');
-        }
-
-        // Function to set focus on the quantity input field
-        function setFocusOnQuantity() {
-            // Select the quantity input field in the last row of the table
-            var lastRow = $('#table_products').find('tbody tr:last');
-            var quantityInput = lastRow.find('input[name="quantity"]')
-            quantityInput.val('');
-            quantityInput.focus();
-        }
-
-        // Prevent form submission on Enter key press in the quantity input field
-        $(document).on('keydown', 'input[name="quantity"]', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                setFocusOnProductSearch(); // Set focus back to the product search input
+            function setFocusOnProductSearch() {
+                // Select the product search input field and set focus on it
+                $('#searchbox_products').select2('open');
             }
-        });
 
-        $(document).ready(function() { 
-            // ...
+            function setFocusOnUnit() {
+                // Select the unit dropdown input field in the last row of the table
+                var lastRow = $('#table_products').find('tbody tr:last');
+                var unitDropdown = lastRow.find('select[name="unit"]');
+                unitDropdown.focus();
+            }
+
+            // Function to set focus on the quantity input field
+            function setFocusOnQuantity() {
+                // Select the quantity input field in the last row of the table
+                var lastRow = $('#table_products').find('tbody tr:last');
+                var quantityInput = lastRow.find('input[name="quantity"]')
+                quantityInput.val('');
+                quantityInput.focus();
+            }
+
+            // Prevent form submission on Enter key press in the quantity input field
+            $(document).on('keydown', 'input[name="quantity"]', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    setFocusOnUnit(); // Set focus on the unit dropdown input field
+                }
+            });
+
+            // Capture Enter key press in the unit dropdown
+            $(document).on('keydown', 'select[name="unit"]', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+            // Trigger DataTable redraw
+            $('#table_products').DataTable().rows().invalidate().draw();
+                    setFocusOnProductSearch(); // Set focus back to the product search input
+
+                }
+            });
+
+        $(document).ready(function() {
             // Add event listener to update total amount on price change
             $('#table_products').on('change', 'input[name="price"]', function() {
                 var table = $('#table_products').DataTable();
                 var row = table.row($(this).closest('tr'));
                 var price = parseFloat($(this).val());
                 var quantity = parseFloat(row.data().quantity);
-                var total = price * quantity;
+                var unit = row.data().unit; // Get the selected unit
+                var total;
+                //= price * quantity;
+                if (unit === 'Doz') {
+                    total = price * quantity * 12; // Multiply by 12 if unit is "Doz"
+                } else {
+                    total = price * quantity; // Otherwise, calculate normally
+                }
                 row.data().price = price.toFixed(2);
                 row.data().total_product = total.toFixed(2);
                 row.invalidate();
-                $(this).closest('tr').find('.total-amount').text(total.toFixed(2) + ' ₨');
+                $(this).closest('tr').find('input[name="total_product"]').val(total.toFixed(2));
                 // Recalculate the sale
                 sale.calculate_sale();
             });

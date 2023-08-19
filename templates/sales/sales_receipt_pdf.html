@@ -18,12 +18,13 @@
         .container {
             width: 100%;
             max-width: 800px;
-            margin: 0 auto;
+            {#margin: 0 auto;#}
+            margin-top: -80px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .header h1 {
@@ -72,11 +73,22 @@
         }
 
         .thanks {
-            text-align: center;
-            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
             font-weight: bold;
-            text-transform: uppercase;
         }
+
+        .left-side, .right-side {
+            direction: rtl;
+            unicode-bidi: bidi-override;
+        }
+
+        .center {
+            text-align: center;
+        }
+
 
         /* Adjust column widths */
         .column-number {
@@ -88,6 +100,10 @@
         }
 
         .column-quantity {
+            width: 10%;
+        }
+
+        .column-unit {
             width: 10%;
         }
 
@@ -110,8 +126,7 @@
         <br>
         <p>Shoe Market Gali Imam Bargha, Sahiwal</p>
         <br>
-        <p>Abdul Rehman <b>عبدالرحمٰن</b> : 0300-9693370</p>
-        <p>Asad ur Rehman <b>اسد الرحمان</b> : 0322-2221645</p>
+        <p>Abdul Rehman <b>عبدالرحمٰن</b> : 0300-9693370 &nbsp;&nbsp;  &mdash; &nbsp;&nbsp; Asad ur Rehman <b>اسد الرحمان</b> : 0322-2221645</p>
     </div>
     <div class="details">
         <div>
@@ -127,6 +142,7 @@
             <th class="column-number">#</th>
             <th class="column-product">Product</th>
             <th class="column-quantity text-center">Quantity</th>
+            <th class="column-unit text-center">Unit</th>
             <th class="column-price text-right">Price</th>
             <th class="column-total text-right">Total</th>
         </tr>
@@ -137,35 +153,45 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ detail.product.name }}</td>
                 <td class="text-center">{{ detail.quantity }}</td>
+                <td class="text-center">{{ detail.unit }}</td>
                 <td class="text-right">{{ detail.price }} ₨</td>
                 <td class="text-right">{{ detail.total_detail }} ₨</td>
             </tr>
         {% endfor %}
         <tr class="total-row">
-            <td colspan="4" class="text-right">Subtotal</td>
+            <td colspan="5" class="text-right">Subtotal</td>
             <td class="text-right">{{ sale.sub_total|floatformat:2 }} ₨</td>
         </tr>
         <tr class="total-row">
-            <td colspan="4" class="text-right">Previous Balance</td>
+            <td colspan="5" class="text-right">Previous Balance</td>
             <td class="text-right">{{ sale.customer.old_balance }} ₨</td>
         </tr>
         <tr class="total-row">
-            <td colspan="4" class="text-right">Grand Total</td>
+            <td colspan="5" class="text-right">Grand Total</td>
             <td class="text-right">{{ sale.grand_total|floatformat:2 }} ₨</td>
         </tr>
         <tr>
-            <td colspan="4" class="text-right">Amount Paid</td>
+            <td colspan="5" class="text-right">Amount Paid</td>
             <td class="text-right">{{ sale.amount_payed }} ₨</td>
         </tr>
         <tr>
-            <td colspan="4" class="text-right">Remaining Balance</td>
+            <td colspan="5" class="text-right">Remaining Balance</td>
             <td class="text-right">{{ sale.amount_change }} ₨</td>
         </tr>
         </tbody>
     </table>
     <div class="thanks">
-        <p>Thank you for your preference!</p>
+        <div class="right-side">
+            <p style="font-size:20px">آپ کی ترجیح کے لئے شکریہ۔</p>
+        </div>
+        <div class="center">
+            <p style="font-size:20px; text-align: center;">چائنا آئٹم کی کوئی وارنٹی نہیں ہے۔</p>
+        </div>
+        <div class="left-side">
+            <p style="font-size:18px;">Checked By: ____________</p>
+        </div>
     </div>
+
 </div>
 </body>
 </html>

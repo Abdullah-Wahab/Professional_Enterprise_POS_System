@@ -1,9 +1,19 @@
 from django.contrib import admin
-
 from .models import Sale, SaleDetail, Transaction
+from import_export.admin import ImportExportModelAdmin
 
-admin.site.register(Sale)
-admin.site.register(SaleDetail)
+# admin.site.register(Sale)
+# admin.site.register(SaleDetail)
+
+
+@admin.register(Sale)
+class SaleAdmin(ImportExportModelAdmin):
+    list_display = ('id', 'grand_total', 'date_added')
+
+
+@admin.register(SaleDetail)
+class SaleDetailAdmin(ImportExportModelAdmin):
+    list_display = ('id', 'sale', 'price')
 
 
 class TransactionAdmin(admin.ModelAdmin):

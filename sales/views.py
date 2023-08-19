@@ -65,6 +65,7 @@ def SalesAddView(request):
                         "product": Product.objects.get(id=int(product["id"])),
                         "price": product["price"],
                         "quantity": product["quantity"],
+                        "unit": product["unit"],
                         "total_detail": product["total_product"]
                     }
                     sale_detail_new = SaleDetail.objects.create(
