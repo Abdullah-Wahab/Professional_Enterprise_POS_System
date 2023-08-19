@@ -50,6 +50,7 @@
                                                 <th>Name</th>
                                                 <th>Price</th>
                                                 <th>Quantity</th>
+                                                <th>Unit</th>
                                                 <th>Total</th>
                                                 </tr>
                                             </thead>
@@ -60,6 +61,7 @@
                                                 <td>{{detail.product.name}}</td>
                                                 <td>{{detail.price}}</td>
                                                 <td class="text-center">{{detail.quantity}}</td>
+                                                <td>{{ detail.unit }}</td>
                                                 <td>{{detail.total_detail}}</td>
                                             </tr>
                                             {% endfor %}

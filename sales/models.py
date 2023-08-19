@@ -50,12 +50,14 @@ class Sale(models.Model):
 
 
 class SaleDetail(models.Model):
+    UNIT_CHOICE = (("Pcs", "Pcs"), ("Doz", "Doz"))
     sale = models.ForeignKey(
         Sale, models.DO_NOTHING, db_column='sale')
     product = models.ForeignKey(
         Product, models.DO_NOTHING, db_column='product')
     price = models.FloatField()
     quantity = models.IntegerField()
+    unit = models.CharField(null=True, blank=True, max_length=20, choices=UNIT_CHOICE)
     total_detail = models.FloatField()
 
     class Meta:
