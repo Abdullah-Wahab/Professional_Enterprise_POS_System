@@ -16,8 +16,9 @@ from datetime import date, timedelta
 from decimal import Decimal
 from django.db.models import Sum
 
-# os.add_dll_directory(r"C:\msys64\mingw64\bin")
-# from weasyprint import HTML, CSS
+# os.add_dll_directory(r"C:\msys64\mingw64\bin") # before moving msys64 folder to D:/
+os.add_dll_directory(r"D:\django_point_of_sale\msys64\mingw64\bin")
+from weasyprint import HTML, CSS
 
 
 def is_ajax(request):
@@ -160,16 +161,16 @@ def ReceiptPDFView(request, sale_id):
     # Create the pdf
     pdf = HTML(string=html_template).write_pdf(stylesheets=[CSS(css_url)])
 
-    # Set a custom filename for the downloaded PDF
-    filename = f"{sale.customer.get_full_name()} - Receipt.pdf"
+    # # Set a custom filename for the downloaded PDF
+    # filename = f"{sale.customer.get_full_name()} - Receipt.pdf"
+    #
+    # # Use FileResponse to return the PDF with the custom filename
+    # response = HttpResponse(pdf, content_type="application/pdf")
+    # response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    #
+    # return response
 
-    # Use FileResponse to return the PDF with the custom filename
-    response = HttpResponse(pdf, content_type="application/pdf")
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
-
-    # return HttpResponse(pdf, content_type="application/pdf")
+    return HttpResponse(pdf, content_type="application/pdf")
 
 
 # Showing all the transactions happened
@@ -180,38 +181,6 @@ def TransactionsView(request):
         "transactions": transactions,
     }
     return render(request, "sales/transactions.html", context=context)
-
-
-# @login_required(login_url="/accounts/login/")
-# def ReportsView(request):
-#     today = date.today()
-#     end_date = today.replace(day=1)
-#     start_date = end_date - timedelta(days=365)
-#
-#     monthly_reports = []
-#     while start_date < today:
-#         end_of_month = start_date.replace(day=28) + timedelta(days=4)
-#         end_date = end_of_month - timedelta(days=end_of_month.day)
-#         total_amount = Transaction.objects.filter(
-#             created_at__range=(start_date, end_date)
-#         ).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
-#         opening_balance = Transaction.objects.filter(
-#             created_at__lt=start_date
-#         ).aggregate(Sum('receivable_balance'))['receivable_balance__sum'] or Decimal('0.00')
-#         ending_balance = opening_balance + (total_amount or Decimal('0.00'))
-#         monthly_reports.append({
-#             'start_date': start_date,
-#             'end_date': end_date,
-#             'opening_balance': opening_balance,
-#             'total_amount': total_amount,
-#             'ending_balance': ending_balance,
-#         })
-#         start_date = end_date + timedelta(days=1)
-#
-#     context = {
-#         "monthly_reports": monthly_reports,
-#     }
-#     return render(request, "sales/reports.html", context=context)
 
 
 @login_required(login_url="/accounts/login/")
