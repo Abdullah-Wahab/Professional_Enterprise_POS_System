@@ -22,7 +22,7 @@ This system was developed to solve real-world inventory challenges and underwent
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Abdullah-Wahab/d_pos.git
+   git clone https://github.com/Abdullah-Wahab/Professional_Enterprise_POS_System.git
    cd Professional_Enterprise_POS_System
 
 2. **Setup Virtual Environment:**
