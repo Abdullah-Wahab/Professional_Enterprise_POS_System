@@ -22,17 +22,20 @@ This system was developed to solve real-world inventory challenges and underwent
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/Abdullah-Wahab/Professional_Enterprise_POS_System.git](https://github.com/Abdullah-Wahab/Professional_Enterprise_POS_System.git)
+   git clone https://github.com/Abdullah-Wahab/d_pos.git
    cd Professional_Enterprise_POS_System
 
 2. **Setup Virtual Environment:**
+    ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 3. **Install Dependencies:**
+    ```bash
     pip install -r requirements.txt
 
 4. **Run Migrations & Start:**
+    ```bash
     python manage.py migrate
     python manage.py runserver
 
